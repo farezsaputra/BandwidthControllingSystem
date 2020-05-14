@@ -1,0 +1,7 @@
+autopep8
+pycodestyle
+Unipath
+dj-database-url
+python-decouple
+gunicorn
+whitenoise
