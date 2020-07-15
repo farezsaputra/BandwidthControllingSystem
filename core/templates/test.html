@@ -1,0 +1,33 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Page Blank {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-profile">
+                <div class="card-body">
+                    <h6 class="card-category text-gray">Backup C</h6>
+                    <btn type="button" class="btn btn-primary btn-round">Backup</btn>
+                    <div id="media" style="width: 500px;height: 500px;">
+                    
+                    <!--
+                    <h4 class="card-title">
+                        Add your content
+                        <p>Hello World</p> 
+                    </h4>
+                    <a href="/" class="btn btn-primary btn-round">Home</a>
+                    -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
