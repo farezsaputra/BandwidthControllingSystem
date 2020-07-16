@@ -22,13 +22,6 @@ def set_value(request):
             uploads = forms['upload']
             downloads = forms['download']
             try:
-                # routeros = login('admin', '4dm1ntr1', '202.169.224.45', '8738')
-                # routeros.query('queue/simple/print')
-                # print("success")
-                # routeros.close()
-                # print(uploads)
-                # print(downloads)
-                #connection = routeros_api.RouterOsApiPool('202.169.224.4 5', username='admin', password='4dm1ntr1', port=8738, plaintext_login=True)
                 if disprof == profile.objects.get(id=1).name:
                     n = 1
                     m = 1
