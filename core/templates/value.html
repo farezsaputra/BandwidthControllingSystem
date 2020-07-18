@@ -13,29 +13,39 @@
                 <form role="form" method="POST" action="">
                     {% csrf_token %} 
                     <div class="card-header">
-                        <h5 class="title">Setting Value</h5>
+                        <h5 class="title">Configuration</h5>
                         <h6 class="card-category">
                             {% if msg %}
                                 <span class="text-danger"{{ msg }}></span>
                             {% else %}
-                                This page designed to set the value
+                                This page designed to set the configuration before controlling bandwidth
                             {% endif %}
                         </h6>
                     </div>
                 {% if success %}
                     
-                    <p> Success to Set </p>
+                    <p> Configuration Saved </p>
 
                 {% else %}
                     <div class="card-body">
                         <div class="row">
+                            <div class="col-md-12 px-md-2">
+                                <div class="form-group">
+                                    <label>Threshold</label>
+                                    {{ conform.othreshold }}
+                              </div>
+                            </div>
+                        <span class="text-danger">{{ conform.othreshold.errors }}</span>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6 pl-md-2">
                                 <div class="form group">
                                     <label>Router</label>
-                                    <select name="showprofile" class="form-control">
+                                    <select name="orouter" class="form-control">
                                         <option selected disabled="True">-- Select Router --</option>
                                         {% for result in profile_result %} 
-                                        <option class="dropdown-item-text">{{result.name}}</option>
+                                        <option type="submit" class="dropdown-item-text" value={{result.id}}>{{result.name}}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -43,10 +53,10 @@
                             <div class="col-md-6 pr-md-2">
                                 <div class="form group">
                                     <label>Queue</label>
-                                    <select name="showqueue" class="form-control">
+                                    <select name="oqueue" class="form-control">
                                         <option selected disabled="True">-- Select Queue --</option>
                                         {% for queues in queue_result %} 
-                                        <option class="dropdown-item-text">{{queues.cname}}</option>
+                                        <option type="submit" class="dropdown-item-text" value={{queues.id}}>{{queues.cname}}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -57,20 +67,39 @@
                             <div class="col-md-6 pl-md-2">
                                 <div class="form-group">
                                     <label>Max Upload</label>
-                                    {{ form.upload }}
+                                    {{ conform.omaxlimitup }}
                               </div>
                             </div>
-                        <span class="text-danger">{{ form.upload.errors }}</span>
+                        <span class="text-danger">{{ conform.omaxlimitup.errors }}</span>
                             
                         
                             <div class="col-md-6 pr-md-2">
                                 <div class="form-group">
                                     <label>Max Download</label> 
-                                    {{ form.download }}
+                                    {{ conform.omaxlimitdown }}
                               </div>
                             </div>
                         </div>
-                        <span class="text-danger">{{ form.download.errors }}</span>
+                        <span class="text-danger">{{ conform.omaxlimitdown.errors }}</span>
+
+                        <div class="row">
+                            <div class="col-md-6 pl-md-2">
+                                <div class="form-group">
+                                    <label>Min Upload</label>
+                                    {{ conform.ominlimitup }}
+                              </div>
+                            </div>
+                        <span class="text-danger">{{ conform.ominlimitup.errors }}</span>
+                            
+                        
+                            <div class="col-md-6 pr-md-2">
+                                <div class="form-group">
+                                    <label>Min Download</label> 
+                                    {{ conform.ominlimitdown }}
+                              </div>
+                            </div>
+                        </div>
+                        <span class="text-danger">{{ conform.ominlimitdown.errors }}</span>
                     </div>    
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary btn-round">Send</button>

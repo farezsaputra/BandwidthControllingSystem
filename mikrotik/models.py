@@ -43,4 +43,14 @@ class child(models.Model):
     def __str__(self):
         return self.cname
 
+class configuration(models.Model):
+    othreshold = models.CharField(max_length=200)
+    orouter = models.ForeignKey(profile,  on_delete=models.CASCADE, default=None)
+    oqueue = models.ForeignKey(child,  on_delete=models.CASCADE, default=None)
+    ominlimitup = models.CharField(max_length=200)
+    ominlimitdown = models.CharField(max_length=200)
+    omaxlimitup = models.CharField(max_length=200)
+    omaxlimitdown = models.CharField(max_length=200)
 
+    def __str__(self):
+        return self.othreshold
