@@ -1,0 +1,67 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Forecast {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <form action="{% url 'set_forecast' %}" method="post" enctype="multipart/form-data" class="form-horizontal">
+                    {% csrf_token %}
+                    <div class="card-header">
+                        <h5 class="title">Forecasting</h5>
+                        <h6 class="card-category">
+                            {% if msg %}
+                                <span class="text-danger"{{ msg }}></span>
+                            {% else %}
+                                This page designed to forecasting the threshold
+                            {% endif %}
+                        </h6>
+                    </div>
+                {% if success %}
+                    
+                    <p> Forecasting Successfull, and the forecasting value are {{ haha }}</p>
+
+                {% else %}    
+                    <div class="card-body">
+                        <label for="name">Select a file:</label>
+                        <input class="form-control" type="file" name="csvfile" id="csvfile" required="required"><br>
+                        <input type="submit" class="btn btn-primary btn-round" value="Upload">
+                        <div id="media" style="width: 500px;height: 500px;">
+                        <br>
+                        <table class="table">
+                            <tr>
+                                <th>MAPE</th>
+                                <th>Threshold</th>
+                                <th>Time</th>
+                            </tr>
+
+                            {% if forecasted %}
+                                <tr>
+                                    <td>{{forecasted.fmape}}</td>
+                                    <td>{{forecasted.fthreshold}}</td>
+                                    <td>{{forecasted.felapsed}}</td>
+                                </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                {% endif %}
+                </form>
+                <p></p>
+                <hr>
+
+                {% for row in setdatas %}
+                   {{ row.dopen }}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

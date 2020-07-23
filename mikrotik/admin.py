@@ -6,4 +6,6 @@ from .models import *
 admin.site.register(profile),
 admin.site.register(parent),
 admin.site.register(child),
-admin.site.register(configuration)
+admin.site.register(configuration),
+admin.site.register(dataset),
+admin.site.register(forecast)

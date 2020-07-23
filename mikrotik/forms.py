@@ -86,3 +86,9 @@ class ConfigForm(ModelForm):
     class Meta(object):
         model = configuration
         fields = "__all__"
+
+class ForecastForm(ModelForm):
+    data_date = forms.DateField()
+    class Meta(object):
+        model = dataset
+        fields = "__all__"

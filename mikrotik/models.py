@@ -54,3 +54,23 @@ class configuration(models.Model):
 
     def __str__(self):
         return self.othreshold
+
+class dataset(models.Model):
+    ddate = models.DateField(blank=True)
+    dopen = models.FloatField(default=0)
+    dhigh = models.FloatField(default=0)
+    dlow = models.FloatField(default=0)
+    dclose = models.FloatField(default=0)
+    dvolume = models.IntegerField(default=0)
+    dopenint = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.ddate    
+
+class forecast(models.Model):
+    fmape = models.FloatField(default=0)
+    fthreshold = models.FloatField(default=0)
+    felapsed = models.FloatField(default=0)
+
+    def __str__(self):
+        return self.fthreshold
