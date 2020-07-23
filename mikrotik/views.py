@@ -119,9 +119,9 @@ def set_forecast(request):
     print(threshold)
 
     Forecast = forecast.objects.create(
-        fmape=mape,
-        fthreshold=threshold,
-        felapsed=elapsed
+        fmape="{:.2f}".format(mape),
+        fthreshold="{:.2f}".format(threshold),
+        felapsed="{:.3f}".format(elapsed)
     )
     forecasted = forecast.objects.last()
 

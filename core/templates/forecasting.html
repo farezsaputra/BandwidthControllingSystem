@@ -28,26 +28,35 @@
 
                 {% else %}    
                     <div class="card-body">
-                        <label for="name">Select a file:</label>
-                        <input class="form-control" type="file" name="csvfile" id="csvfile" required="required"><br>
-                        <input type="submit" class="btn btn-primary btn-round" value="Upload">
-                        <div id="media" style="width: 500px;height: 500px;">
-                        <br>
-                        <table class="table">
-                            <tr>
-                                <th>MAPE</th>
-                                <th>Threshold</th>
-                                <th>Time</th>
-                            </tr>
-
-                            {% if forecasted %}
-                                <tr>
-                                    <td>{{forecasted.fmape}}</td>
-                                    <td>{{forecasted.fthreshold}}</td>
-                                    <td>{{forecasted.felapsed}}</td>
-                                </tr>
-                            {% endif %}
-                        </table>
+                        <div class="row">
+                            <div class="col-md-6 pl-md-2">
+                                <div class="form group">
+                                    <label for="name">Select a file :</label>
+                                    <input class="form-control" type="file" name="csvfile" id="csvfile" required="required"><br>
+                                    <input type="submit" class="btn btn-primary btn-round" value="Upload">
+                                    <div id="media" style="width: 500px;height: 500px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 pr-md-2">
+                                <div class="form group">
+                                    <label for="result">Result :</label>
+                                    <table class="table">
+                                        <tr>
+                                            <th>MAPE</th>
+                                            <th>Threshold</th>
+                                            <th>Time</th>
+                                        </tr>
+                                        {% if forecasted %}
+                                            <tr>
+                                                <td>{{forecasted.fmape}}</td>
+                                                <td>{{forecasted.fthreshold}}</td>
+                                                <td>{{forecasted.felapsed}}</td>
+                                            </tr>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>    
                     </div>
                 {% endif %}
                 </form>
