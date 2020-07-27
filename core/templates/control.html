@@ -1,0 +1,53 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Forecast {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <form action="" method="post" role="controls">
+                    {% csrf_token %}
+                    <div class="card-header">
+                        <h5 class="title">Controlling</h5>
+                    </div>  
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 px-md-2">
+                                <div class="form group">
+                                    <label for="name">Controlling Bandwidth</label>
+                                    <br>
+                                    <label class="switch">
+                                        <input type="checkbox" id="checkbox" value="{{tog.id}}">
+                                        <span class="slider round"></span>
+                                    </label>                                  
+                                </div>
+                            </div>
+                        </div>    
+                    </div>
+                    <script src="https://code.jquery.com/jquery-3.3.1.js"></script> <!-- Import Jquery Here-->
+                    <script type="text/javascript">
+                    $(document).ready(function() {
+                        $('#checkbox').change(function() {
+                            $.post("/setcontrol/", {
+                                id: '{{tog.id}}', 
+                                isworking: this.checked, 
+                                csrfmiddlewaretoken: '{{ csrf_token }}' 
+                            });
+                        });
+                    }); 
+</script>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

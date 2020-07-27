@@ -8,4 +8,5 @@ admin.site.register(parent),
 admin.site.register(child),
 admin.site.register(configuration),
 admin.site.register(dataset),
-admin.site.register(forecast)
+admin.site.register(forecast),
+admin.site.register(toogle)

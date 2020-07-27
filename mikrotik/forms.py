@@ -92,3 +92,9 @@ class ForecastForm(ModelForm):
     class Meta(object):
         model = dataset
         fields = "__all__"
+
+class ControlForm(ModelForm):
+    status = forms.BooleanField()
+    class Meta(object):
+        model = toogle
+        fields = ['is_working']

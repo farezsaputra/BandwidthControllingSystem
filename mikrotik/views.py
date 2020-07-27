@@ -15,7 +15,11 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 import logging, io, csv, math
 import numpy as np
 import pandas as pd
+import time, json
+import paramiko
+import routeros_api
 import time
+from getpass import getpass
 
 
 def set_config(request):
@@ -131,12 +135,59 @@ def set_forecast(request):
     }
     return render(request, "forecasting.html", context)
     
-    
-    # except Exception as e:
-    #     logging.getLogger("error_logger").error("Unable to upload file. "+repr(e))
-    #     messages.error(request,"Unable to upload file. "+repr(e))
 
-    #return HttpResponseRedirect(reverse("forecasting.html"))
+def set_control(request):
+    tog, created = toogle.objects.get_or_create(id=1)
+    if "GET" == request.method:
+        return render(request, "control.html", {'tog': tog})
+    elif "POST" == request.method:
+        tog = toogle.objects.get(id=request.POST['id'])
+        tog.is_working = request.POST['isworking'] == 'true'
+        tog.save()
+
+        # taking configuration value
+        con = configuration.objects.last()
+        ipaddr = con.orouter.ipadd
+        ports = con.orouter.portapi
+        user = con.orouter.username
+        passw = con.orouter.password
+        parent = con.oqueue.dedicated
+        id_queue = con.oqueue.id
+        thres = con.othreshold
+        maxup = con.omaxlimitup
+        maxdown = con.omaxlimitdown
+        minup = con.ominlimitup
+        mindown = con.ominlimitdown
+
+        # connecting to router 
+        connection = routeros_api.RouterOsApiPool(ipaddr, username=user, password=passw, port=ports, plaintext_login=True)
+        api = connection.get_api()
+
+        while tog.is_working == True:
+            tog = toogle.objects.get(id=1)
+            get_throughput(api,thres,id_queue,maxup,maxdown,minup,mindown)
+        connection.disconnect()
+    return HttpResponse('success')
+
+def get_throughput(hulk, limit, ids, upmax, downmax, upmin, downmin):
+    #getting throughput value
+    test = hulk.get_binary_resource('/').call('interface/monitor-traffic', {'interface': b'ether2','once':b'true'})
+    getrx = test[0]['rx-bits-per-second']
+    gettx = test[0]['tx-bits-per-second']
+    convrx = float(getrx.decode("utf-8"))/1000
+    convtx = float(gettx.decode("utf-8"))/1000    
+    print("Tx = ",convtx," kb")
+    print("Rx = ",convrx," kb")
+    
+    #comparing value
+    simple = hulk.get_resource("/queue/simple")
+    if convrx <= limit:
+        simple.set(id=str(ids), max_limit="{}/{}".format(upmax,downmax))
+        print("add limit successfull become "+downmax)
+    else :
+        simple.set(id=str(ids), max_limit="{}/{}".format(upmin,downmin))
+        print("decrease limit successfull become "+downmin)
+    time.sleep(5)
 # def set_value(request):
 #     if request.method == 'POST':
 #         form = SetValue(request.POST)

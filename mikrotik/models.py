@@ -44,7 +44,7 @@ class child(models.Model):
         return self.cname
 
 class configuration(models.Model):
-    othreshold = models.CharField(max_length=200)
+    othreshold = models.IntegerField(default=0)
     orouter = models.ForeignKey(profile,  on_delete=models.CASCADE, default=None)
     oqueue = models.ForeignKey(child,  on_delete=models.CASCADE, default=None)
     ominlimitup = models.CharField(max_length=200)
@@ -53,7 +53,7 @@ class configuration(models.Model):
     omaxlimitdown = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.othreshold
+        return self.omaxlimitdown
 
 class dataset(models.Model):
     ddate = models.DateField(blank=True)
@@ -74,3 +74,9 @@ class forecast(models.Model):
 
     def __str__(self):
         return self.fthreshold
+
+class toogle(models.Model):
+    is_working = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.is_working

@@ -34,21 +34,20 @@
                                     <label for="name">Select a file :</label>
                                     <input class="form-control" type="file" name="csvfile" id="csvfile" required="required"><br>
                                     <input type="submit" class="btn btn-primary btn-round" value="Upload">
-                                    <div id="media" style="width: 500px;height: 500px;"></div>
                                 </div>
                             </div>
                             <div class="col-md-6 pr-md-2">
                                 <div class="form group">
                                     <label for="result">Result :</label>
                                     <table class="table">
-                                        <tr>
+                                        <tr style="text-align:justify;">
                                             <th>MAPE</th>
                                             <th>Threshold</th>
                                             <th>Time</th>
                                         </tr>
                                         {% if forecasted %}
-                                            <tr>
-                                                <td>{{forecasted.fmape}}</td>
+                                            <tr style="text-align:justify;">
+                                                <td >{{forecasted.fmape}}</td>
                                                 <td>{{forecasted.fthreshold}}</td>
                                                 <td>{{forecasted.felapsed}}</td>
                                             </tr>
@@ -60,12 +59,6 @@
                     </div>
                 {% endif %}
                 </form>
-                <p></p>
-                <hr>
-
-                {% for row in setdatas %}
-                   {{ row.dopen }}
-                {% endfor %}
             </div>
         </div>
     </div>

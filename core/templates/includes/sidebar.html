@@ -14,7 +14,7 @@
 
         {% if user.is_authenticated %}
         <ul class="nav">
-          <li class="active ">
+          <li>
             <a href="/">
               <i class="tim-icons icon-chart-pie-36"></i>
               <p>Dashboard</p>
@@ -41,9 +41,9 @@
             </a>
           </li>
           <li>
-            <a href="/page-user.html">
-              <i class="tim-icons icon-single-02"></i>
-              <p>User Profile</p>
+            <a href="{% url 'setcontrol' %}">
+              <i class="tim-icons icon-spaceship"></i>
+              <p>Controlling</p>
             </a>
           </li>
           <li>
@@ -55,7 +55,7 @@
           <li>
             <a href="{% url 'set_forecast' %}">
               <i class="tim-icons icon-world"></i>
-              <p>Test</p>
+              <p>Forecasting</p>
             </a>
           </li>
           <li>
