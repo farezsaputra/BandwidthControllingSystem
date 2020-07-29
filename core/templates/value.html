@@ -66,7 +66,7 @@
                         <div class="row">
                             <div class="col-md-6 pl-md-2">
                                 <div class="form-group">
-                                    <label>Max Upload</label>
+                                    <label>Maximum Upload</label>
                                     {{ conform.omaxlimitup }}
                               </div>
                             </div>
@@ -75,17 +75,37 @@
                         
                             <div class="col-md-6 pr-md-2">
                                 <div class="form-group">
-                                    <label>Max Download</label> 
+                                    <label>Maximum Download</label> 
                                     {{ conform.omaxlimitdown }}
                               </div>
                             </div>
                         </div>
                         <span class="text-danger">{{ conform.omaxlimitdown.errors }}</span>
 
+
                         <div class="row">
                             <div class="col-md-6 pl-md-2">
                                 <div class="form-group">
-                                    <label>Min Upload</label>
+                                    <label>Medium Upload</label>
+                                    {{ conform.omedlimitup }}
+                              </div>
+                            </div>
+                        <span class="text-danger">{{ conform.omedlimitup.errors }}</span>
+                            
+                            <div class="col-md-6 pr-md-2">
+                                <div class="form-group">
+                                    <label>Medium Download</label> 
+                                    {{ conform.omedlimitdown }}
+                              </div>
+                            </div>
+                        </div>
+                        <span class="text-danger">{{ conform.omedlimitdown.errors }}</span>
+
+                        
+                        <div class="row">
+                            <div class="col-md-6 pl-md-2">
+                                <div class="form-group">
+                                    <label>Minimum Upload</label>
                                     {{ conform.ominlimitup }}
                               </div>
                             </div>
@@ -94,7 +114,7 @@
                         
                             <div class="col-md-6 pr-md-2">
                                 <div class="form-group">
-                                    <label>Min Download</label> 
+                                    <label>Minimum Download</label> 
                                     {{ conform.ominlimitdown }}
                               </div>
                             </div>

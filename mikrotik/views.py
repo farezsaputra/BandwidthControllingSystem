@@ -158,18 +158,20 @@ def set_control(request):
         maxdown = con.omaxlimitdown
         minup = con.ominlimitup
         mindown = con.ominlimitdown
+        medup = con.omedlimitup
+        meddown = con.omedlimitdown
 
         # connecting to router 
         connection = routeros_api.RouterOsApiPool(ipaddr, username=user, password=passw, port=ports, plaintext_login=True)
         api = connection.get_api()
-
+        # multithreading 
         while tog.is_working == True:
             tog = toogle.objects.get(id=1)
-            get_throughput(api,thres,id_queue,maxup,maxdown,minup,mindown)
+            get_throughput(api,thres,id_queue,maxup,maxdown,minup,mindown,medup, meddown)
         connection.disconnect()
     return HttpResponse('success')
 
-def get_throughput(hulk, limit, ids, upmax, downmax, upmin, downmin):
+def get_throughput(hulk, limit, ids, upmax, downmax, upmin, downmin, upmed, downmed):
     #getting throughput value
     test = hulk.get_binary_resource('/').call('interface/monitor-traffic', {'interface': b'ether2','once':b'true'})
     getrx = test[0]['rx-bits-per-second']
@@ -181,12 +183,27 @@ def get_throughput(hulk, limit, ids, upmax, downmax, upmin, downmin):
     
     #comparing value
     simple = hulk.get_resource("/queue/simple")
-    if convrx <= limit:
-        simple.set(id=str(ids), max_limit="{}/{}".format(upmax,downmax))
-        print("add limit successfull become "+downmax)
+    if convrx <= (0.5*limit):
+        time.sleep(2)   # giving spare time to make sure
+        if convrx <= (0.5*limit):
+            simple.set(id=str(ids), max_limit="{}/{}".format(upmax,downmax))
+            print("Max limit become "+downmax)
+        else :
+            return convrx
+    elif convrx <= limit:
+        time.sleep(2)
+        if convrx <= limit:
+            simple.set(id=str(ids), max_limit="{}/{}".format(upmed,downmed))
+            print("Max limit become "+downmed)
+        else :
+            return convrx
     else :
-        simple.set(id=str(ids), max_limit="{}/{}".format(upmin,downmin))
-        print("decrease limit successfull become "+downmin)
+        time.sleep(2)
+        if convrx > limit:
+            simple.set(id=str(ids), max_limit="{}/{}".format(upmin,downmin))
+            print("Max limit become "+downmin)
+        else :
+            return convrx
     time.sleep(5)
 # def set_value(request):
 #     if request.method == 'POST':

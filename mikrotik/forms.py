@@ -42,7 +42,7 @@ class ConfigForm(ModelForm):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder" : "Threshold"
+                "placeholder" : "Threshold in kbps"
             }
         )
     )
@@ -52,7 +52,6 @@ class ConfigForm(ModelForm):
             attrs={
                 "class": "form-control",
                 "placeholder" : "Minimum Upload"
-
             }
         )
     ) 
@@ -62,6 +61,24 @@ class ConfigForm(ModelForm):
             attrs={
                 "class": "form-control",
                 "placeholder" : "Minimum Download"
+            }
+        )
+    )
+
+    omedlimitup = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder" : "Medium Upload"
+            }
+        )
+    )
+
+    omedlimitdown = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder" : "Medium Download"
             }
         )
     )
