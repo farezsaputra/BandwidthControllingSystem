@@ -18,7 +18,6 @@ import dj_database_url
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
@@ -29,7 +28,7 @@ SECRET_KEY = 'ej7n3*9$7c#w_!87h#)1(4e)1daj&sbrqnls8r5h6)-pymj%nd'
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', config('SERVER', default='127.0.0.1')]
-
+AUTH_USER_MODEL = 'testapp.User'
 
 # Application definition
 
@@ -41,11 +40,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app',
+    'activity_log',
+    'testapp',
     'mikrotik.apps.MikrotikConfig'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'activity_log.middleware.ActivityLogMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -88,6 +90,31 @@ DATABASES = {
     }
 }
 
+DATABASE_ROUTERS = ['activity_log.router.DatabaseAppsRouter']
+DATABASE_APPS_MAPPING = {'activity_log': 'default'}
+
+ACTIVITYLOG_AUTOCREATE_DB = False
+
+# App Settings
+# Log anonimus actions?
+ACTIVITYLOG_ANONIMOUS = True
+
+# Update last activity datetime in user profile. Needs updates for user model.
+ACTIVITYLOG_LAST_ACTIVITY = False
+
+# Only this methods will be logged
+ACTIVITYLOG_METHODS = ('POST', 'GET')
+
+# List of response statuses, which logged. By default - all logged.
+# Don't use with ACTIVITYLOG_EXCLUDE_STATUSES
+ACTIVITYLOG_STATUSES = (200, )
+
+# List of response statuses, which ignores. Don't use with ACTIVITYLOG_STATUSES
+# ACTIVITYLOG_EXCLUDE_STATUSES = (302, )
+
+# URL substrings, which ignores
+ACTIVITYLOG_EXCLUDE_URLS = ('/admin/activity_log/activitylog', )
+ACTIVITYLOG_GET_EXTRA_DATA = 'testapp.models.make_extra_data'
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
