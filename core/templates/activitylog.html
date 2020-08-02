@@ -1,0 +1,60 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Forecast {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <form action="{% url 'getlog' %}" method="get" class="form-horizontal">
+                    {% csrf_token %}
+                    <div class="card-header">
+                        <h5 class="title">Log Activity</h5>
+                        <h6 class="card-category">
+                            {% if msg %}
+                                <span class="text-danger"{{ msg }}></span>
+                            {% else %}
+                                This page designed to see the log activity
+                            {% endif %}
+                        </h6>
+                    </div>
+   
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 px-md-2">
+                                <div class="form group">
+                                    <table class="table">
+                                        <tr style="text-align:center;">
+                                            <th>User</th>
+                                            <th>Method</th>
+                                            <th>Datetime</th>
+                                            <th>URL</th>
+                                            <th>IP Address</th>                                            
+                                        </tr>
+                                        {% for activ in activity %}
+                                            <tr style="text-align:center;">
+                                                <td >{{activ.user}}</td>
+                                                <td>{{activ.request_method}}</td>
+                                                <td>{{activ.datetime}}</td>
+                                                <td>{{activ.request_url}}</td>
+                                                <td>{{activ.ip_address}}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>    
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

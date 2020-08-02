@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.forms.utils import ErrorList
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
+from activity_log.models import *
 from .models import *
 from .forms import *
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -51,6 +52,15 @@ def set_config(request):
 def mean_absolute_percentage_error(y_true, y_pred): 
   y_true, y_pred = np.array(y_true), np.array(y_pred)
   return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+def get_log_activity(request):
+    activity = ActivityLog.objects.all().order_by('-datetime')
+    if "GET" == request.method:
+        return render(request, "activitylog.html", {"activity": activity})
+    context={
+        'activity': activity
+    }
+    return render(request, "activitylog.html", context)
 
 def set_forecast(request):
     data = dataset.objects.all()
