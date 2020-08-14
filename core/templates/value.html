@@ -29,16 +29,6 @@
                 {% else %}
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-12 px-md-2">
-                                <div class="form-group">
-                                    <label>Threshold</label>
-                                    {{ conform.othreshold }}
-                              </div>
-                            </div>
-                        <span class="text-danger">{{ conform.othreshold.errors }}</span>
-                        </div>
-
-                        <div class="row">
                             <div class="col-md-6 pl-md-2">
                                 <div class="form group">
                                     <label>Router</label>
@@ -52,11 +42,11 @@
                             </div>    
                             <div class="col-md-6 pr-md-2">
                                 <div class="form group">
-                                    <label>Queue</label>
+                                    <label>To Queue</label>
                                     <select name="oqueue" class="form-control">
-                                        <option selected disabled="True">-- Select Queue --</option>
+                                        <option selected disabled="True">-- Select Parent --</option>
                                         {% for queues in queue_result %} 
-                                        <option type="submit" class="dropdown-item-text" value={{queues.id}}>{{queues.cname}}</option>
+                                        <option type="submit" class="dropdown-item-text" value={{queues.id}}>{{queues.pname}}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -66,7 +56,7 @@
                         <div class="row">
                             <div class="col-md-6 pl-md-2">
                                 <div class="form-group">
-                                    <label>Maximum Upload</label>
+                                    <label>Max Dedicated Upload</label>
                                     {{ conform.omaxlimitup }}
                               </div>
                             </div>
@@ -75,37 +65,18 @@
                         
                             <div class="col-md-6 pr-md-2">
                                 <div class="form-group">
-                                    <label>Maximum Download</label> 
+                                    <label>Max Dedicated Download</label> 
                                     {{ conform.omaxlimitdown }}
                               </div>
                             </div>
                         </div>
                         <span class="text-danger">{{ conform.omaxlimitdown.errors }}</span>
 
-
-                        <div class="row">
-                            <div class="col-md-6 pl-md-2">
-                                <div class="form-group">
-                                    <label>Medium Upload</label>
-                                    {{ conform.omedlimitup }}
-                              </div>
-                            </div>
-                        <span class="text-danger">{{ conform.omedlimitup.errors }}</span>
-                            
-                            <div class="col-md-6 pr-md-2">
-                                <div class="form-group">
-                                    <label>Medium Download</label> 
-                                    {{ conform.omedlimitdown }}
-                              </div>
-                            </div>
-                        </div>
-                        <span class="text-danger">{{ conform.omedlimitdown.errors }}</span>
-
                         
                         <div class="row">
                             <div class="col-md-6 pl-md-2">
                                 <div class="form-group">
-                                    <label>Minimum Upload</label>
+                                    <label>Max Shared Upload</label>
                                     {{ conform.ominlimitup }}
                               </div>
                             </div>
@@ -114,7 +85,7 @@
                         
                             <div class="col-md-6 pr-md-2">
                                 <div class="form-group">
-                                    <label>Minimum Download</label> 
+                                    <label>Min Shared Download</label> 
                                     {{ conform.ominlimitdown }}
                               </div>
                             </div>

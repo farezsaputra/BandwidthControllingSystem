@@ -13,19 +13,20 @@ from activity_log.models import *
 from .models import *
 from .forms import *
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from influxdb import InfluxDBClient
 import logging, io, csv, math
 import numpy as np
 import pandas as pd
 import time, json
 import paramiko
 import routeros_api
-import time
+import time, statistics
 from getpass import getpass
 
 
 def set_config(request):
     profile_result=profile.objects.all()
-    queue_result=child.objects.all()
+    queue_result=parent.objects.all()
     if request.method == 'POST':
         conform = ConfigForm(request.POST)
         print(request.POST)
@@ -155,66 +156,118 @@ def set_control(request):
         tog.is_working = request.POST['isworking'] == 'true'
         tog.save()
 
+        # influx db
+        client = InfluxDBClient(host='10.33.194.100',port=8086,database='telegraf')
+        
         # taking configuration value
-        con = configuration.objects.last()
-        ipaddr = con.orouter.ipadd
-        ports = con.orouter.portapi
-        user = con.orouter.username
-        passw = con.orouter.password
-        parent = con.oqueue.dedicated
-        id_queue = con.oqueue.id
-        thres = con.othreshold
-        maxup = con.omaxlimitup
-        maxdown = con.omaxlimitdown
-        minup = con.ominlimitup
-        mindown = con.ominlimitdown
-        medup = con.omedlimitup
-        meddown = con.omedlimitdown
+        #con = configuration.objects.last()
+        #ipaddr = con.orouter.ipadd
+        #ports = con.orouter.portapi
+        #user = con.orouter.username
+        #passw = con.orouter.password
+        # parent = con.oqueue
+        # id_queue = con.oqueue.id
+        # thres = con.othreshold
+        # maxup = con.omaxlimitup
+        # maxdown = con.omaxlimitdown
+        # minup = con.ominlimitup
+        # mindown = con.ominlimitdown
+        # medup = con.omedlimitup
+        # meddown = con.omedlimitdown
 
         # connecting to router 
-        connection = routeros_api.RouterOsApiPool(ipaddr, username=user, password=passw, port=ports, plaintext_login=True)
-        api = connection.get_api()
+        #connection = routeros_api.RouterOsApiPool('10.33.107.122', username='admin', password='4dm1ntr1', port=8738, plaintext_login=True)
+        #api = connection.get_api()
+
+        
         # multithreading 
         while tog.is_working == True:
             tog = toogle.objects.get(id=1)
-            get_throughput(api,thres,id_queue,maxup,maxdown,minup,mindown,medup, meddown)
-        connection.disconnect()
+            query = "SELECT derivative(mean(Download),1s) AS Download FROM \"FTTH PPPOE HUB CDT\" where time>= now()- 24h group by time(1s) fill(null) tz('Asia/Jakarta')"
+            result = client.query(query)
+            point = list(result.get_points())
+            #print(point)
+            get_threshold(point)
+            #get_throughput(api,dl)
+            time.sleep(1)
+            #get_throughput(api,thres,id_queue,maxup,maxdown,minup,mindown,medup, meddown)
+        #connection.disconnect()
     return HttpResponse('success')
 
-def get_throughput(hulk, limit, ids, upmax, downmax, upmin, downmin, upmed, downmed):
+def get_threshold(data):
+    down = []
+    for datas in data:
+        down.append(datas['Download'])
+    #print("down")
+    maxlimit = 1000000
+    stadev = statistics.pstdev(down)
+    mean = statistics.mean(down)
+    print("==========================")
+    print("Download :" + "%.2f" %(down[len(down)-1]))
+    print("Standar Deviasi :" + "%.2f" %(stadev))
+    print("Average :" + "%.2f" %(mean))
+    
+    if stadev < mean:
+        if stadev > 0.5*mean:
+            print("Allocating "+ "%.3f" %(maxlimit-(mean+(0.5*stadev))))
+        elif stadev <= 0.5*mean:
+            print("Allocating "+ "%.3f" %(maxlimit-(mean+stadev)))    
+    elif stadev >= mean:
+        if stadev > 1.5*mean:
+            print("Allocating "+ "%.3f" %(maxlimit-stadev))
+        elif stadev <= 1.5*mean:
+            print("Allocating "+ "%.3f" %(maxlimit-(stadev+(0.5*mean))))
+    # load = pd.Series(down)
+    # print(load.values)
+    with open('testing.csv', 'w', newline='') as file:
+        fieldnames = ['Download', 'St.Dev', 'Mean']
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow({'Download': down[len(down)-1], 'St.Dev': stadev, 'Mean': mean})
+    
+       
+
+#def get_throughput(hulk, limit, ids, upmax, downmax, upmin, downmin, upmed, downmed):
+def get_throughput(hulk,ld):
     #getting throughput value
     test = hulk.get_binary_resource('/').call('interface/monitor-traffic', {'interface': b'ether2','once':b'true'})
     getrx = test[0]['rx-bits-per-second']
     gettx = test[0]['tx-bits-per-second']
     convrx = float(getrx.decode("utf-8"))/1000
-    convtx = float(gettx.decode("utf-8"))/1000    
+    convtx = float(gettx.decode("utf-8"))/1000
     print("Tx = ",convtx," kb")
     print("Rx = ",convrx," kb")
+    ld.append(convrx)
+    #print(ld)
+    #stat = statistics.stdev(ld)
+    #print(stat)
+    
     
     #comparing value
-    simple = hulk.get_resource("/queue/simple")
-    if convrx <= (0.5*limit):
-        time.sleep(2)   # giving spare time to make sure
-        if convrx <= (0.5*limit):
-            simple.set(id=str(ids), max_limit="{}/{}".format(upmax,downmax))
-            print("Max limit become "+downmax)
-        else :
-            return convrx
-    elif convrx <= limit:
-        time.sleep(2)
-        if convrx <= limit:
-            simple.set(id=str(ids), max_limit="{}/{}".format(upmed,downmed))
-            print("Max limit become "+downmed)
-        else :
-            return convrx
-    else :
-        time.sleep(2)
-        if convrx > limit:
-            simple.set(id=str(ids), max_limit="{}/{}".format(upmin,downmin))
-            print("Max limit become "+downmin)
-        else :
-            return convrx
-    time.sleep(5)
+    # simple = hulk.get_resource("/queue/simple")
+    # if convrx <= (0.5*limit):
+    #     time.sleep(2)   # giving spare time to make sure
+    #     if convrx <= (0.5*limit):
+    #         simple.set(id=str(ids), max_limit="{}/{}".format(upmax,downmax))
+    #         print("Max limit become "+downmax)
+    #     else :
+    #         return convrx
+    # elif convrx <= limit:
+    #     time.sleep(2)
+    #     if convrx <= limit:
+    #         simple.set(id=str(ids), max_limit="{}/{}".format(upmed,downmed))
+    #         print("Max limit become "+downmed)
+    #     else :
+    #         return convrx
+    # else :
+    #     time.sleep(2)
+    #     if convrx > limit:
+    #         simple.set(id=str(ids), max_limit="{}/{}".format(upmin,downmin))
+    #         print("Max limit become "+downmin)
+    #     else :
+    #         return convrx
+    # time.sleep(5)
+
 # def set_value(request):
 #     if request.method == 'POST':
 #         form = SetValue(request.POST)

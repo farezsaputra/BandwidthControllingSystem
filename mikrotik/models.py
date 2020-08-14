@@ -45,13 +45,10 @@ class child(models.Model):
         return self.cname
 
 class configuration(models.Model):
-    othreshold = models.IntegerField(default=0)
     orouter = models.ForeignKey(profile,  on_delete=models.CASCADE, default=None)
-    oqueue = models.ForeignKey(child,  on_delete=models.CASCADE, default=None)
+    oqueue = models.ForeignKey(parent,  on_delete=models.CASCADE, default=None)
     ominlimitup = models.CharField(max_length=200)
     ominlimitdown = models.CharField(max_length=200)
-    omedlimitup = models.CharField(max_length=200, default=None)
-    omedlimitdown = models.CharField(max_length=200, default=None)
     omaxlimitup = models.CharField(max_length=200)
     omaxlimitdown = models.CharField(max_length=200)
 
