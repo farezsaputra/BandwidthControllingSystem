@@ -33,7 +33,7 @@
                                 <div class="form group">
                                     <label>Router</label>
                                     <select name="orouter" class="form-control">
-                                        <option selected disabled="True">-- Select Router --</option>
+                                        <option selected disabled="True"style="text-align:justify;">-- Select Router --</option>
                                         {% for result in profile_result %} 
                                         <option type="submit" class="dropdown-item-text" value={{result.id}}>{{result.name}}</option>
                                         {% endfor %}
@@ -42,11 +42,11 @@
                             </div>    
                             <div class="col-md-6 pr-md-2">
                                 <div class="form group">
-                                    <label>To Queue</label>
-                                    <select name="oqueue" class="form-control">
-                                        <option selected disabled="True">-- Select Parent --</option>
-                                        {% for queues in queue_result %} 
-                                        <option type="submit" class="dropdown-item-text" value={{queues.id}}>{{queues.pname}}</option>
+                                    <label>Database</label>
+                                    <select name="oinflux" class="form-control">
+                                        <option selected disabled="True" style="text-align:justify;">-- Select Mode --</option>
+                                        {% for data in data_result %}
+                                        <option type="submit" class="dropdown-item-text" value={{data.id}}>{{data.database}}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -56,46 +56,64 @@
                         <div class="row">
                             <div class="col-md-6 pl-md-2">
                                 <div class="form-group">
-                                    <label>Max Dedicated Upload</label>
-                                    {{ conform.omaxlimitup }}
+                                    <label>Dedicated</label>
+                                    <select name="odedicated" class="form-control">
+                                        <option selected disabled="True" style="text-align:justify;">-- Select Pool --</option>
+                                        {% for queue in queue_result %} 
+                                        <option type="submit" class="dropdown-item-text" value={{queue.id}}>{{queue.pname}}</option>
+                                        {% endfor %}
+                                    </select>
                               </div>
                             </div>
-                        <span class="text-danger">{{ conform.omaxlimitup.errors }}</span>
-                            
-                        
+                                                    
                             <div class="col-md-6 pr-md-2">
                                 <div class="form-group">
-                                    <label>Max Dedicated Download</label> 
-                                    {{ conform.omaxlimitdown }}
+                                    <label>Shared</label> 
+                                    <select name="oshared" class="form-control">
+                                        <option selected disabled="True" style="text-align:justify;">-- Select Pool --</option>
+                                        {% for queues in queue_result %} 
+                                        <option type="submit" class="dropdown-item-text" value={{queues.id}}>{{queues.pname}}</option>
+                                        {% endfor %}
+                                    </select>
                               </div>
                             </div>
                         </div>
-                        <span class="text-danger">{{ conform.omaxlimitdown.errors }}</span>
-
-                        
-                        <div class="row">
-                            <div class="col-md-6 pl-md-2">
-                                <div class="form-group">
-                                    <label>Max Shared Upload</label>
-                                    {{ conform.ominlimitup }}
-                              </div>
-                            </div>
-                        <span class="text-danger">{{ conform.ominlimitup.errors }}</span>
-                            
-                        
-                            <div class="col-md-6 pr-md-2">
-                                <div class="form-group">
-                                    <label>Min Shared Download</label> 
-                                    {{ conform.ominlimitdown }}
-                              </div>
-                            </div>
-                        </div>
-                        <span class="text-danger">{{ conform.ominlimitdown.errors }}</span>
+                                            
                     </div>    
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary btn-round">Send</button>
                     </div>
                 {% endif %}
+                </form>
+
+                <form role="forms" method="GET">
+                    {% csrf_token %} 
+                    <div class="card-header">
+                        <h5 class="title">Result</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="col-md-12 px-md-2">
+                            <div class="form group">
+                                
+                                <table class="table">
+                                    <tr style="text-align:center;">
+                                        <th>Router</th>
+                                        <th>Database</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                    </tr>
+                                    {% for config in config_result %}
+                                        <tr style="text-align:center;">
+                                            <td>{{config.orouter.name}}</td>
+                                            <td>{{config.oinflux.host}}</td>
+                                            <td>{{config.odedicated.pname}}</td>
+                                            <td>{{config.oshared.pname}}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+                    </div> 
                 </form>
             </div>
         </div>

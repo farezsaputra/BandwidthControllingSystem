@@ -37,51 +37,11 @@ class SetValue(forms.Form):
             }
         ))
 
-class ConfigForm(ModelForm):
-    ominlimitup = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control",
-                "placeholder" : "Maximum Shared Upload"
-            }
-        )
-    ) 
-
-    ominlimitdown = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control",
-                "placeholder" : "Maximum Shared Download"
-            }
-        )
-    )
-
-    omaxlimitup = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control",
-                "placeholder" : "Maximum Dedicated Upload"
-            }
-        )
-    )
-
-    omaxlimitdown = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control",
-                "placeholder" : "Maximum Dedicated Download"
-            }
-        )
-    )
+class ConfigForm(ModelForm): 
     class Meta(object):
         model = configuration
         fields = "__all__"
 
-class ForecastForm(ModelForm):
-    data_date = forms.DateField()
-    class Meta(object):
-        model = dataset
-        fields = "__all__"
 
 class ControlForm(ModelForm):
     status = forms.BooleanField()
