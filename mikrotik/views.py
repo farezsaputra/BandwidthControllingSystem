@@ -12,14 +12,12 @@ from django.urls import reverse
 from activity_log.models import *
 from .models import *
 from .forms import *
-from sklearn.metrics import mean_squared_error, mean_absolute_error
 from influxdb import InfluxDBClient
 import logging, io, csv, math
 import numpy as np
 import pandas as pd
 import time, json
 import paramiko
-import routeros_api
 import time, statistics
 from getpass import getpass
 
@@ -154,35 +152,20 @@ def set_control(request):
         tog = toogle.objects.get(id=request.POST['id'])
         tog.is_working = request.POST['isworking'] == 'true'
         tog.save()
-
-        # influx db
-        client = InfluxDBClient(host='10.33.194.100',port=8086,database='telegraf')
-        
+               
         # taking configuration value
-        #con = configuration.objects.last()
-        #ipaddr = con.orouter.ipadd
-        #ports = con.orouter.portapi
-        #user = con.orouter.username
-        #passw = con.orouter.password
-        # parent = con.oqueue
-        # id_queue = con.oqueue.id
-        # thres = con.othreshold
-        # maxup = con.omaxlimitup
-        # maxdown = con.omaxlimitdown
-        # minup = con.ominlimitup
-        # mindown = con.ominlimitdown
-        # medup = con.omedlimitup
-        # meddown = con.omedlimitdown
-
-        # connecting to router 
-        #connection = routeros_api.RouterOsApiPool('10.33.107.122', username='admin', password='4dm1ntr1', port=8738, plaintext_login=True)
-        #api = connection.get_api()
-
+        con = configuration.objects.last()
+        inf_ip = con.oinflux.host
+        inf_port = con.oinflux.ports
+        inf_database = con.oinflux.database
         
+        # influx db
+        client = InfluxDBClient(host='10.33.107.122',port=3004,database='telegraf')
+                        
         # multithreading 
         while tog.is_working == True:
             tog = toogle.objects.get(id=1)
-            query = "SELECT derivative(mean(Download),1s) AS Download FROM \"FTTH PPPOE HUB CDT\" where time>= now()- 24h group by time(1s) fill(null) tz('Asia/Jakarta')"
+            query = "SELECT derivative(mean(Download),1s) AS Download FROM \"Queue Dedicated\" where time>= now()- 24h group by time(1s) fill(null) tz('Asia/Jakarta')"
             result = client.query(query)
             point = list(result.get_points())
             #print(point)
@@ -198,31 +181,53 @@ def set_autocontrol(data):
     for datas in data:
         down.append(datas['Download'])
     #print("down")
-    maxlimit = 1000000
+    maxlimit = 100000
     stadev = statistics.pstdev(down)
     mean = statistics.mean(down)
     print("==========================")
-    print("Download :" + "%.2f" %(down[len(down)-1]))
-    print("Standar Deviasi :" + "%.2f" %(stadev))
-    print("Average :" + "%.2f" %(mean))
+    print("Download :" + "%.2f" %(((down[len(down)-1])/1000)*8))
+    print("Standar Deviasi :" + "%.2f" %((stadev*8)/1000))
+    print("Average :" + "%.2f" %((mean*8)/1000))
     
-    if stadev < mean:
-        if stadev > 0.5*mean:
-            print("Allocating "+ "%.3f" %(maxlimit-(mean+(0.5*stadev))))
-        elif stadev <= 0.5*mean:
-            print("Allocating "+ "%.3f" %(maxlimit-(mean+stadev)))    
-    elif stadev >= mean:
-        if stadev > 1.5*mean:
-            print("Allocating "+ "%.3f" %(maxlimit-stadev))
-        elif stadev <= 1.5*mean:
-            print("Allocating "+ "%.3f" %(maxlimit-(stadev+(0.5*mean))))
+    if stadev < (down[len(down)-1]):                                                            # if standard deviasi lessthan last throughput
+        if stadev > 0.5*(down[len(down)-1]):                                                    # if standard deviasi more than 0,5*last throughput
+            if ((((down[len(down)-1])+(0.5*stadev))/1000)*8) < maxlimit:                        # if allocated less than maxlimit
+                allocate = ((((down[len(down)-1])+(0.5*stadev))/1000)*8)                        #last throughput + 0,5 * standar deviasi
+                print("Allocating "+ "%.3f" %(maxlimit-allocate))
+                print("Spacing "+ "%.3f" %(allocate))
+            elif ((((down[len(down)-1])+(0.5*stadev))/1000)*8) >= maxlimit:                     #if allocated more than or equal with maxlimit
+                allocate = ((((down[len(down)-1])+(0.5*stadev))/1000)*8)
+                print("Allocating :" + str(maxlimit-maxlimit))                                  # allocated 0
+                print("Spacing "+ "%.3f" %((((down[len(down)-1])+(0.5*stadev))/1000)*8))
+        elif stadev <= 0.5*(down[len(down)-1]):
+            if ((((down[len(down)-1])+stadev)/1000)*8) < maxlimit:
+                print("Allocating "+ "%.3f" %(maxlimit-((((down[len(down)-1])+stadev)/1000)*8)))
+                print("Spacing "+ "%.3f" %((((down[len(down)-1])+stadev)/1000)*8))
+            elif ((((down[len(down)-1])+stadev)/1000)*8) >= maxlimit:
+                print("Allocating :" + str(maxlimit-maxlimit))
+                print("Spacing "+ "%.3f" %((((down[len(down)-1])+stadev)/1000)*8))    
+    elif stadev >= (down[len(down)-1]):
+        if stadev > 1.5*(down[len(down)-1]):
+            if (((stadev)/1000)*8) < maxlimit:
+                print("Allocating "+ "%.3f" %(maxlimit-(((stadev)/1000)*8)))
+                print("Spacing "+ "%.3f" %(((stadev)/1000)*8))
+            elif (((stadev)/1000)*8) >= maxlimit:
+                print("Allocating :" + str(maxlimit-maxlimit))
+                print("Spacing "+ "%.3f" %(((stadev)/1000)*8))
+        elif stadev <= 1.5*(down[len(down)-1]):
+            if (((stadev+(0.5*(down[len(down)-1])))/1000)*8) < maxlimit:
+                print("Allocating "+ "%.3f" %(maxlimit-(((stadev+(0.5*(down[len(down)-1])))/1000)*8)))
+                print("Spacing "+ "%.3f" %(((stadev+(0.5*(down[len(down)-1])))/1000)*8))
+            elif (((stadev+(0.5*(down[len(down)-1])))/1000)*8) >= maxlimit:
+                print("Allocating :" + str(maxlimit-maxlimit))
+                print("Spacing "+ "%.3f" %(((stadev+(0.5*(down[len(down)-1])))/1000)*8))
     # load = pd.Series(down)
     # print(load.values)
-    with open('testing.csv', 'w', newline='') as file:
-        fieldnames = ['Download', 'St.Dev', 'Mean']
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerow({'Download': down[len(down)-1], 'St.Dev': stadev, 'Mean': mean})
+    # with open('testing.csv', 'w', newline='') as file:
+    #     fieldnames = ['Download', 'St.Dev', 'Mean']
+    #     writer = csv.DictWriter(file, fieldnames=fieldnames)
+    #     writer.writeheader()
+    #     writer.writerow({'Download': down[len(down)-1], 'St.Dev': stadev, 'Mean': mean})
     
        
 
