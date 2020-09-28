@@ -3,11 +3,33 @@
 {% block title %} Dashboard {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
-{% block stylesheets %}{% endblock stylesheets %}
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.css"/>
+{% endblock stylesheets %}
 
 {% block content %}
-
-    <div class="row">
+<div class="content">
+<h3> Pilih Pelanggan </h3>
+<form id="form" action="{% url 'canvas'%}">
+    <select id="user" name="user">
+    <option disabled="true" selected>{{pengguna}}</option>
+        {% for value in pelanggan %}
+        <option>{{value}}</option>
+        {% endfor %}
+    </select>
+    <input type="button" value="Pilih" id="button">
+</form>
+<hr/>
+</div>
+<div class="content">
+    <h4> Pilih rentang waktu </h4>
+    <input id="awal" class="datepicker datetimepicker-input" size="20" value="">
+    Sampai 
+    <input id="akhir" class="datepicker" size="20" value="" >
+    <input type="button" value="Refresh" onclick="refresh()">
+</div>
+<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+    {% comment %} <div class="row">
 
       <div class="col-12">
         <div class="card card-chart">
@@ -376,19 +398,174 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> {% endcomment %}
 
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-
+{% comment %} 
   <script>
     $(document).ready(function() {
       // Javascript method's body can be found in assets/js/demos.js
       demo.initDashboardPageCharts();
 
     });
-  </script>
+  </script> {% endcomment %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.js"></script>
+<script type="text/javascript">
+$('.datepicker').datepicker({
+    format: 'dd-mm-yyyy',
+    autoclose: true,
+    todayHighlight: true,
+});
+$("#button").click(function(){
+	if($('#user option:selected').prop('disabled') == true){
+        alert("Tolong Pilih Pelanggan");
+    } else{
+        $("form").submit();
+    }
+});
+</script>
+<script>
+var user = '{{pengguna}}'
+var endpoint = '/api/chart/'+user+'/'
+var upload = [];
+var download = [];
+var waktu = [];
+function render(endpoint){
+    $.ajax({
+        method: "GET",
+        url: endpoint,
+        success: function(json_object){
+        waktu = json_object.waktu
+        download = json_object.download
+        upload = json_object.upload
+        setChart()
+        },
+        error: function(error_data){
+            console.log("error")
+            console.log(error_data)
+        }
+    })
+}
+function setChart() { 
+        var dps = [];
+        var dps2 = [];
+        var chart = new CanvasJS.Chart("chartContainer", {
+            animationEnabled: true,
+            zoomEnabled: true,
+            backgroundColor: "#000000",
+            title:{
+                text: "Data Bandwidth",
+                fontColor: "#ffffff"
+            },
+            axisX:{
+//			labelBackgroundColor: "gray",
+            gridColor: "#d048b6",
+            gridThickness: 0.5,
+			labelFontColor: "#d048b6",
+      	    tickThickness: 0
+		    },
+            axisY :{
+                tickThickness: 0,
+                labelFontColor: "#d048b6",
+                gridThickness: 0,
+                labelFormatter: addSymbols,
+                lineThickness: 0
+            },
+            toolTip: {
+                shared: false,
+                contentFormatter: addTiptool
+            },
+            legend: {
+                fontColor: "#ffffff",
+                cursor: "pointer",
+		        verticalAlign: "bottom",
+		        horizontalAlign: "center",
+		        itemclick: toogleDataSeries,
+                fontSize: 13
+            },
+            data: [{
+                type: "spline",
+                showInLegend: true,
+                name: "Upload",
+                yValueFormatString: "# KB",
+                xValueFormatString: "DDD HH:mm:ss",
+                dataPoints: dps,
+                lineColor: "grey"                     
+                },
+                {
+                type: "spline",
+                showInLegend: true,
+                name: "Download",
+                yValueFormatString: "# KB",
+                xValueFormatString: "DDD HH:mm:ss",
+                dataPoints: dps2,    
+                lineColor: "#d048b6"                        
+                },
+                ]
+            });
+            function parseDataPoints () {                    
+                for (var j = 0; j <= waktu.length; j++)
+                    dps.push({x: new Date(waktu[j]),y: upload[j]});    
+            };		
+            function parseDataPoints2 () {                    
+                for (var j = 0; j <= download.length; j++)
+                    dps2.push({x: new Date(waktu[j]),y: download[j]});    
+            };	
+            parseDataPoints();
+            parseDataPoints2();
+            chart.options.data[0].dataPoints = dps;
+            chart.options.data[1].dataPoints = dps2; 
+            chart.render();
+            function toogleDataSeries(e){
+            	if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            		e.dataSeries.visible = false;
+            	} else{
+            		e.dataSeries.visible = true;
+            	}
+	            chart.render();
+            }
+            function addSymbols(e){
+                var suffixes = ["", "KB", "MB", "GB"];
+                var order = Math.max(Math.floor(Math.log(e.value) / Math.log(1000)), 0);
+                if(order > suffixes.length - 1)
+                    order = suffixes.length - 1;
+                var suffix = suffixes[order];
+                return CanvasJS.formatNumber(e.value / Math.pow(1000, order)) + suffix;
+            }
+            function addTiptool(e){
+                var content = " ";
+				for (var i = 0; i < e.entries.length; i++) {
+                    if(e.entries[i].dataPoint.y<1001){
+					    content += e.entries[i].dataSeries.name + " " + "<strong>" + (e.entries[i].dataPoint.y).toFixed(2) + "</strong> Bytes";
+                        content += "<br/>";
+    				}else if(e.entries[i].dataPoint.y>1000 && e.entries[i].dataPoint.y<1000001){
+                        content += e.entries[i].dataSeries.name + " " + "<strong>" + (e.entries[i].dataPoint.y/1000).toFixed(2) + "</strong> KB";
+					    content += "<br/>";
+                    }
+                    else if(e.entries[i].dataPoint.y>1000000 && e.entries[i].dataPoint.y<1000000001){
+                        content += e.entries[i].dataSeries.name + " " + "<strong>" + (e.entries[i].dataPoint.y/1000000).toFixed(2) + "</strong> MB";
+					    content += "<br/>";
+                    }
+                }
+				return content;
+            }
+}
+render(endpoint)
+function refresh(){
+    var awal = document.querySelector('#awal').value
+    var akhir = document.querySelector('#akhir').value
+    var awal1 = awal.split("-");
+    var a = awal1[1]+'-'+awal1[0]+'-'+awal1[2];
+    var a1 = new Date(a).toISOString();
+    var akhir1 = akhir.split("-");
+    var b = akhir1[1]+'-'+akhir1[0]+'-'+akhir1[2]
+    var b1 = new Date(b).toISOString();
+    var endpoint = '/api/chart/'+user+'/'+a1+'/'+b1
+    render(endpoint);
+};
+</script>
 
 {% endblock javascripts %}

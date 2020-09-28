@@ -46,7 +46,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="$(if [ "$OSTYPE" "==" "cygwin" ]; then cygpath -u 'E:\#2020LulusUGM\django\core\env'; else echo '/E/#2020LulusUGM/django/core/env'; fi;)"
+VIRTUAL_ENV="$(if [ "$OSTYPE" "==" "cygwin" ]; then cygpath -u 'D:\Magang JMN\Controlling\BandwidthControllingSystem\env'; else echo '/D/Magang JMN/Controlling/BandwidthControllingSystem/env'; fi;)"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

@@ -15,7 +15,7 @@
         {% if user.is_authenticated %}
         <ul class="nav">
           <li>
-            <a href="/">
+            <a href="{% url 'canvas'%}?pengguna=">
               <i class="tim-icons icon-chart-pie-36"></i>
               <p>Dashboard</p>
             </a>
@@ -40,7 +40,12 @@
               <p>Notifications</p>
             </a>
           </li>
-          
+          <li>
+            <a href="{% url 'canvas'%}?pengguna=">
+              <i class="tim-icons icon-bell-55"></i>
+              <p>Pelanggan</p>
+            </a>
+          </li>
           <li>
             <a href="{% url 'setconfig' %}">
               <i class="tim-icons icon-puzzle-10"></i>
@@ -91,8 +96,7 @@
               <p>See product</p>
             </a>
           </li>
-        </ul>
+        </ul>-->
         {% endif %}
-        -->
       </div>
     </div>

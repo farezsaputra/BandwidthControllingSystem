@@ -1,6 +1,6 @@
 @echo off
 
-set "VIRTUAL_ENV=E:\#2020LulusUGM\django\core\env"
+set "VIRTUAL_ENV=D:\Magang JMN\Controlling\BandwidthControllingSystem\env"
 
 if defined _OLD_VIRTUAL_PROMPT (
     set "PROMPT=%_OLD_VIRTUAL_PROMPT%"
