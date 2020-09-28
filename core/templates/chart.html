@@ -11,7 +11,7 @@
 <div class="content">
 <h3> Pilih Pelanggan </h3>
 <form id="form" action="{% url 'canvas'%}">
-    <select id="user" name="user">
+    <select id="pengguna" name="pengguna">
     <option disabled="true" selected>{{pengguna}}</option>
         {% for value in pelanggan %}
         <option>{{value}}</option>
@@ -28,7 +28,7 @@
     <input id="akhir" class="datepicker" size="20" value="" >
     <input type="button" value="Refresh" onclick="refresh()">
 </div>
-<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+<div id="chartCanvas" style="height: 370px; width: 100%;"></div>
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
@@ -42,7 +42,7 @@ $('.datepicker').datepicker({
     todayHighlight: true,
 });
 $("#button").click(function(){
-	if($('#user option:selected').prop('disabled') == true){
+	if($('#pengguna option:selected').prop('disabled') == true){
         alert("Tolong Pilih Pelanggan");
     } else{
         $("form").submit();
@@ -74,10 +74,10 @@ function render(endpoint){
 function setChart() { 
         var dps = [];
         var dps2 = [];
-        var chart = new CanvasJS.Chart("chartContainer", {
+        var chart = new CanvasJS.Chart("chartCanvas", {
             animationEnabled: true,
             zoomEnabled: true,
-            backgroundColor: "#000000",
+            backgroundColor: "#1E1E2E",
             title:{
                 text: "Data Bandwidth",
                 fontColor: "#ffffff"

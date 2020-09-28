@@ -27,7 +27,7 @@ SECRET_KEY = 'ej7n3*9$7c#w_!87h#)1(4e)1daj&sbrqnls8r5h6)-pymj%nd'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.114','localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 AUTH_USER_MODEL = 'testapp.User'
 
 # Application definition

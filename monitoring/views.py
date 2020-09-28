@@ -4,12 +4,12 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.forms.utils import ErrorList
 from django.urls import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
 from django.views.generic import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from pysnmp.hlapi import SnmpEngine,CommunityData,UdpTransportTarget,ContextData,ObjectType
+from pysnmp.hlapi import SnmpEngine,CommunityData,UdpTransportTarget,ContextData,ObjectType,getCmd,ObjectIdentity
 from influxdb import InfluxDBClient
 from monitoring.forms import AuthForm
 import datetime
@@ -19,6 +19,7 @@ import re
 import pymysql
 import sys
 import json
+import os
 
 # Create your views here.
 class HomeView(View):
@@ -28,20 +29,94 @@ class HomeView(View):
 class LoginView(View):
     def get(self,request):
         form = AuthForm()
-        return render(request,'login.html', {'form' : form})
+        return render(request,'tambah.html', {'form' : form})
     def post(self,request):    
         form = AuthForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
+            address = form.cleaned_data['address']
+            port = form.cleaned_data['port']
+            router = form.cleaned_data['router']
+            sandi = form.cleaned_data['sandi']
             community = form.cleaned_data['community']
             form = AuthForm()
-            msg = username
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(address,port=int(port),username=router,password=sandi)
+            print('Berhasil')
+            stdin, stdout, stderr = ssh_client.exec_command('queue simple print oid')
+            with open("ghanny.txt", 'a') as f:
+                    f.writelines(stdout.read().decode('ascii').strip("\n"))
+            f = open("ghanny.txt")
+            lines = f.readlines()
+            f.close()
+            f = open("ghanny.txt", 'w')
+            f.writelines(lines[1:])
+            f.close()
+            f = open("ghanny.txt")
+            lines = f.readlines()
+            f.close()
+            f = open("ghanny.txt", 'w')
+            for line in lines:
+                f.write(line[6:].replace(" ",""))
+            f.close()
+            hilang = [';;;','queues','packets']
+            with open('ghanny.txt') as old, open('hasil.txt', 'w') as new:
+                for line in old:
+                    if not any(a in line for a in hilang):
+                        new.write(line)
+            def get(host,oid):
+                errorIndication, errorStatus, errorIndex, varBinds = next(
+                    getCmd(SnmpEngine(),
+                        CommunityData(community, mpModel=0),
+                        UdpTransportTarget((host, 161)),
+                        ContextData(),
+                        ObjectType(ObjectIdentity(oid)))
+                )
+                if errorIndication:
+                    print(errorIndication)
+                elif errorStatus:
+                    print('%s at %s' % (errorStatus.prettyPrint(),
+                                        errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
+                else:
+                    for varBind in varBinds:
+                        print(varBind[1])
+                return varBind[1]
+
+            db = pymysql.connect("localhost","root","","monitoring")
+            cursor = db.cursor()
+            count = 1
+            with open("hasil.txt", 'r') as f:
+                kamu = []
+                for line in f.readlines():
+                    if((count%3) != 0 or count == 0):    
+                        count += 1
+                        d = line.strip().split("=")
+                        kamu.append(d[1])
+                    elif (count == 3):
+                        d = line.strip().split("=")
+                        kamu.append(d[1])
+                        name = get(address, kamu[0])
+                        # cursor.execute('insert into user_oid (name,download,upload) values("%s","%s","%s")' % (name,kamu[1],kamu[2]))
+                        cursor.execute('insert into user_oid (name,upload,download) select * from (select "%s" as name,"%s" as upload,"%s" as download) as tmp where not exists (select name from user_oid where name = "%s") limit 1' % (name,kamu[1],kamu[2],name))
+                        db.commit()
+                        print("Data Berhasil Masuk!")
+                        kamu = []
+                        count = 1                   
+                    else:
+                        db.rollback()
+                        print("Data Gagal Masuk!")
+            db.close
+            os.remove("ghanny.txt")
+            os.remove("hasil.txt")
+            msg = "User Berhasil Ditambahkan!"
+            args = {'form' : form, 'text' : msg}    
+            return render(request,"tambah.html", args)
+        msg = username
         args = {'form' : form, 'text' : msg}
-        return render(request,"login.html", args)
+        return render(request,"tambah.html", args)
 
 class CanvasView(View):
-    def get(self, request, pengguna=None):
+    def get(self, request, pengguna=None, id=None):
         pengguna = request.GET['pengguna']
         if (pengguna is None):
             return render(request,'list.html')
@@ -141,7 +216,7 @@ def grafik(request):
     return HttpResponse(berhasil)
 
 def get_data(request, *args, **kwargs):
-    client = InfluxDBClient(host='192.168.0.200',username='telegraf',password='telegraf',port=8086,database='telegraf')
+    client = InfluxDBClient(host='localhost',username='telegraf',password='telegraf',port=8086,database='telegraf')
     query = "SELECT derivative(mean(Upload),1s) AS Download, derivative(mean(Download),1s) AS Upload FROM \"FTTH PPPOE HUB CDT\" where time>= now()- 10h group by time(1s) fill(null) tz('Asia/Jakarta')"
     result = client.query(query)
     point = list(result.get_points())
@@ -243,7 +318,7 @@ class BulanView(APIView):
             akhir = year+'-12-31T16:59:59Z'
         else:
             print("Bulan Tidak Ditemukan")
-        client = InfluxDBClient(host='192.168.0.200',port=8086,database='telegraf')
+        client = InfluxDBClient(host='localhost',port=8086,database='telegraf')
         query = "SELECT derivative(mean(Upload),1s) AS Download, derivative(mean(Download),1s) AS Upload FROM " + context['username'] + " where time >= \'" + awal + "\' and time < \'" + akhir + "\' group by time(1s)"
         result = client.query(query)
         point = list(result.get_points())
@@ -299,7 +374,7 @@ class RangeView(APIView):
     authentication_classes = []
     permission_classes = []
     def get(self, request, username, awal, akhir, format=None):
-        client = InfluxDBClient(host='192.168.0.200',port=8086,database='telegraf')
+        client = InfluxDBClient(host='localhost',port=8086,database='telegraf')
         context = {}
         context['username'] = "{}".format(username)
         context['awal'] = "{}".format(awal).replace('\"','')
@@ -328,7 +403,7 @@ class DataView(APIView):
     permission_classes = []
 
     def get(self, request,username='Test',format=None):
-        client = InfluxDBClient(host='192.168.0.200',port=8086,database='telegraf')
+        client = InfluxDBClient(host='localhost',port=8086,database='telegraf')
         query = "SELECT derivative(mean(Upload),1s) AS Download, derivative(mean(Download),1s) AS Upload FROM \"{}\" where time>= now()- 1h group by time(1s) fill(null)".format(username)
         result = client.query(query)
         point = list(result.get_points())
