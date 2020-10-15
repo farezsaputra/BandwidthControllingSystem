@@ -20,5 +20,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("authentication.urls")),  # add this
     path("", include("app.urls")),
-    path("", include("mikrotik.urls"))  # add this
+    path("", include("mikrotik.urls")),
+    path("", include("monitoring.urls")),  # add this
 ]

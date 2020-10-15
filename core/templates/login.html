@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+        <div class="col-md-12">
+            <div class="card">
+
+              <form role="form" method="post">
+              
+                {% csrf_token %} 
+                <h2>{{msg}}</h2>
+                <h4>{{user}}</h4>
+                <div class="card-header">
+                  <h5 class="title">Tambah User</h5>
+
+                  <h6 class="card-category">
+                  <span class="text-danger">{{ text }}</span>
+                  </h6>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                      <div class="col-md-4 px-md-1">
+                        <div class="form-group">
+                          <label>IP Address</label>
+                          {{ form.address }}
+                        </div>
+                      </div>
+
+                    </div>
+                    <div class="row">
+
+                      <div class="col-md-4 px-md-1">
+                        <div class="form-group">
+                          <label>Port SSH</label>
+                          {{ form.port }}
+                        </div>
+                      </div>
+
+                    </div>
+                    <div class="row">
+
+                      <div class="col-md-4 px-md-1">
+                        <div class="form-group">
+                          <label>Username</label>
+                          {{ form.router }}
+                        </div>
+                      </div>
+
+                    </div>
+                    <div class="row">
+
+                      <div class="col-md-4 px-md-1">
+                        <div class="form-group">
+                          <label>Password</label>
+                          {{ form.sandi }}
+                        </div>
+                      </div>
+
+                    </div>
+                    <div class="row">
+
+                      <div class="col-md-4 px-md-1">
+                        <div class="form-group">
+                          <label>Community</label>
+                          {{ form.community }}
+                        </div>
+                      </div>
+
+                    </div>
+                    
+                </div>
+                <button type="submit" class="btn btn-fill btn-primary">Tambah User</button>
+              </form>
+
+            </div>
+          </div>
+      </div>
+
+
+{% endblock content %}

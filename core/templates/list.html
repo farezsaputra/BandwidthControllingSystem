@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}
+List
+{% endblock title %}
+
+{% block content %}
+<h3> Pilih Pelanggan </h3>
+{{json_object}}
+<hr/>
+<form id="form" action="{% url 'canvas'%}">
+<select id="user" name="user">
+    <option disabled="true" selected>-- Pilih Pelanggan --</option>
+    {% for value in pelanggan %}
+    <option>{{value}}</option>
+    {% endfor %}
+</select>
+<input type="button" value="Pilih" id="button">
+{% endblock content %}
+
+{% block scripts %}
+<script type="text/javascript">
+$("#button").click(function(){
+	if($('#user option:selected').prop('disabled') == true){
+        alert("Tolong Pilih Pelanggan");
+    } else{
+        $("form").submit();
+    }
+});
+</script>
+{% endblock scripts %}

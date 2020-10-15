@@ -1,0 +1,184 @@
+from django.shortcuts import render
+import routeros_api
+from routeros import login
+# Create your views here.
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.contrib.auth.models import User
+from django.forms.utils import ErrorList
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+from activity_log.models import *
+from .models import *
+from .forms import *
+from influxdb import InfluxDBClient
+import logging, io, csv, math
+import numpy as np
+import pandas as pd
+import time, json
+import paramiko
+import time, statistics
+from getpass import getpass
+
+
+def set_config(request):
+    profile_result=profile.objects.all()
+    queue_result=parent.objects.all()
+    data_result = influx.objects.all()
+    config_result = configuration.objects.all()
+    if request.method == 'POST':
+        conform = ConfigForm(request.POST)
+        print(request.POST)
+        if conform.is_valid(): 
+            conform.save()
+            #print(request.POST)
+            msg     = "Value saved."
+            success = True
+            context = {
+                'msg': msg,
+                'success': success,
+                'profile_result': profile_result,
+                'queue_result': queue_result,
+                'data_result': data_result,
+                'conform': conform
+            }   
+            return render(request, "value.html", context)
+        else:
+            msg = 'Form is not valid'
+            print(msg)
+            context = {
+                'msg': msg,
+                'profile_result': profile_result,
+                'queue_result': queue_result,
+                'data_result': data_result,
+                'conform': conform
+            }
+            return render(request, "value.html", context)    
+    else:
+        #print("haha")
+        conform = ConfigForm() 
+
+    return render(request, "value.html", {"conform": conform, 'profile_result': profile_result,'queue_result': queue_result, 'config_result': config_result, 'data_result': data_result})
+
+
+def get_log_activity(request):
+    activity = ActivityLog.objects.all().order_by('-datetime')
+    if "GET" == request.method:
+        return render(request, "activitylog.html", {"activity": activity})
+    context={
+        'activity': activity
+    }
+    return render(request, "activitylog.html", context)
+    
+
+def set_control(request):
+    tog, created = toogle.objects.get_or_create(id=1)
+    if "GET" == request.method:
+        return render(request, "control.html", {'tog': tog})
+    elif "POST" == request.method:
+        tog = toogle.objects.get(id=request.POST['id'])
+        tog.is_working = request.POST['isworking'] == 'true'
+        tog.save()
+               
+        # taking configuration value
+        con = configuration.objects.last()
+        inf_ip = con.oinflux.host
+        inf_port = con.oinflux.ports
+        inf_database = con.oinflux.database
+        sh = con.oshared.id
+
+        # influx db
+        client = InfluxDBClient(host='localhost',port=8086,database='telegraf')
+        
+        # mikrotik
+        connection = routeros_api.RouterOsApiPool('10.33.109.121', username='farez', password='q1w2e3r4t5', port=8738, plaintext_login=True)
+        api = connection.get_api()
+        simple = api.get_resource('/queue/simple')
+        sh = con.oshared.id
+        sh_id = int(sh)-1
+
+        # multithreading 
+        while tog.is_working == True:
+            tog = toogle.objects.get(id=1)
+            que_mean = "SELECT derivative(mean(Download),1s) AS Download FROM \"Queue Dedicated\" where time>= now()- 10s group by time(1s) fill(null) tz('Asia/Jakarta')"
+            query = "SELECT derivative(mean(Download),1s) AS Download FROM \"Queue Dedicated\" where time>= now()- 24h group by time(1s) fill(null) tz('Asia/Jakarta')"
+            result = client.query(query)
+            res_mean = client.query(que_mean)
+            point = list(result.get_points())
+            po_mean = list(res_mean.get_points())
+            set_autocontrol(point,po_mean)
+            time.sleep(2)
+    return HttpResponse('success')
+
+def set_autocontrol(data,da_mean):
+    down = []
+    arr_mean = []
+    for datas in data:
+        down.append(datas['Download'])
+    for arrs in da_mean:
+        arr_mean.append(arrs['Download'])
+    maxlimit = 95
+    stadev = statistics.pstdev(down)
+    mean = statistics.mean(arr_mean)
+    print("==========================")
+    print("Download :" + "%.1f" %(((down[len(down)-1])/1000000)*8)+ "M")	
+    print("Standar Deviasi :" + "%.1f" %((stadev*8)/1000000)+ "M")
+    print("Average :" + "%.1f" %((mean*8)/1000000) + "M")
+    
+    if stadev < (down[len(down)-1]):                                                            # if standard deviasi lessthan last throughput
+        if stadev > 0.5*(down[len(down)-1]):                                                    # if standard deviasi more than 0,5*last throughput
+            if ((((down[len(down)-1])+(0.5*stadev))/1000000)*8) < maxlimit:                        # if allocated less than maxlimit
+                space = ((((down[len(down)-1])+(0.5*stadev))/1000000)*8)                        #last throughput + 0,5 * standar deviasi
+                alloc = round(maxlimit-space,0)
+                
+                print("Allocating "+ "%.1f" %(maxlimit-space))
+                print("Spacing "+ "%.1f" %(space))
+            elif ((((down[len(down)-1])+(0.5*stadev))/1000000)*8) >= maxlimit:                     #if allocated more than or equal with maxlimit
+                allocate = ((((down[len(down)-1])+(0.5*stadev))/1000000)*8)
+                print("Allocating :" + str(maxlimit-maxlimit))                                  # allocated 0
+                print("Spacing "+ "%.1f" %((((down[len(down)-1])+(0.5*stadev))/1000000)*8))
+        elif stadev <= 0.5*(down[len(down)-1]):
+            if ((((down[len(down)-1])+stadev)/1000000)*8) < maxlimit:
+                print("Allocating "+ "%.1f" %(maxlimit-((((down[len(down)-1])+stadev)/1000000)*8)))
+                print("Spacing "+ "%.1f" %((((down[len(down)-1])+stadev)/1000000)*8))
+            elif ((((down[len(down)-1])+stadev)/1000000)*8) >= maxlimit:
+                print("Allocating :" + str(maxlimit-maxlimit))
+                print("Spacing "+ "%.1f" %((((down[len(down)-1])+stadev)/1000000)*8))    
+    elif stadev >= (down[len(down)-1]):
+        if stadev > 1.5*(down[len(down)-1]):
+            if (((stadev)/1000000)*8) < maxlimit:
+                print("Allocating "+ "%.1f" %(maxlimit-(((stadev)/1000000)*8)))
+                print("Spacing "+ "%.1f" %(((stadev)/1000000)*8))
+            elif (((stadev)/1000000)*8) >= maxlimit:
+                print("Allocating :" + str(maxlimit-maxlimit))
+                print("Spacing "+ "%.1f" %(((stadev)/1000000)*8))
+        elif stadev <= 1.5*(down[len(down)-1]):
+            if (((stadev+(0.5*(down[len(down)-1])))/1000000)*8) < maxlimit:
+                print("Allocating "+ "%.1f" %(maxlimit-(((stadev+(0.5*(down[len(down)-1])))/1000000)*8)))
+                print("Spacing "+ "%.1f" %(((stadev+(0.5*(down[len(down)-1])))/1000000)*8))
+            elif (((stadev+(0.5*(down[len(down)-1])))/1000000)*8) >= maxlimit:
+                print("Allocating :" + str(maxlimit-maxlimit))
+                print("Spacing "+ "%.1f" %(((stadev+(0.5*(down[len(down)-1])))/1000000)*8))
+    # load = pd.Series(down)
+    # print(load.values)
+    # with open('testing.csv', 'w', newline='') as file:
+    #     fieldnames = ['Download', 'St.Dev', 'Mean']
+    #     writer = csv.DictWriter(file, fieldnames=fieldnames)
+    #     writer.writeheader()
+    #     writer.writerow({'Download': down[len(down)-1], 'St.Dev': stadev, 'Mean': mean})
+    
+       
+
+#def get_throughput(hulk, limit, ids, upmax, downmax, upmin, downmin, upmed, downmed):
+def get_throughput(hulk,ld):
+    #getting throughput value
+    test = hulk.get_binary_resource('/').call('interface/monitor-traffic', {'interface': b'ether2','once':b'true'})
+    getrx = test[0]['rx-bits-per-second']
+    gettx = test[0]['tx-bits-per-second']
+    convrx = float(getrx.decode("utf-8"))/1000
+    convtx = float(gettx.decode("utf-8"))/1000
+    print("Tx = ",convtx," kb")
+    print("Rx = ",convrx," kb")
+    ld.append(convrx)
+

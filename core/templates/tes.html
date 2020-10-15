@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}
+Tes Aja
+{% endblock title %}
+
+{% block scripts %}
+<script>
+window.onload = function () {
+var chart = new CanvasJS.Chart("chartContainer",
+    {
+      zoomEnabled: true,      
+      
+      title:{
+       text: "Chart With Date-Time Stamps Inputs"       
+     },
+
+     data: [
+     {        
+      type: "area",
+//      xValueType: "dateTime",
+      dataPoints: [                  
+              { x: new Date("2020-09-03T04:09:40Z"), y :71},
+              { x: "2020-09-03T04:09:41Z", y : 55 },
+              { x: "2020-09-03T04:09:42Z", y:  50 },
+              { x: "2020-09-03T04:09:43Z", y : 65 },
+              { x: "2020-09-03T04:09:44Z", y : 95 },
+              { x: "2020-09-03T04:09:45Z", y : 68 },
+              { x: "2020-09-03T04:09:46Z", y : 28 },
+              { x: "2020-09-03T04:09:47Z", y : 34 },
+              { x: "2020-09-03T04:09:48Z", y : 14 },
+              { x: "2020-09-03T04:09:49Z", y : 34 },
+              { x: "2020-09-03T04:09:50Z", y : 44 },
+              { x: "2020-09-03T04:09:51Z", y : 84 },
+              { x: "2020-09-03T04:09:52Z", y : 4  },
+              { x: "2020-09-03T04:09:53Z", y : 44 },
+              { x: "2020-09-03T04:09:54Z", y : 11 }
+      ]
+    }
+    ]
+  });
+
+    chart.render();
+  }
+</script>
+{% endblock scripts %}
+
+{% block content %}
+<div id="chartContainer" style="height: 300px; width: 100%;"></div>
+{% endblock content %}

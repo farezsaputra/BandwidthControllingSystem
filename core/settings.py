@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-from decouple import config
+#from decouple import config
 from unipath import Path
 import dj_database_url
 
@@ -27,7 +27,7 @@ SECRET_KEY = 'ej7n3*9$7c#w_!87h#)1(4e)1daj&sbrqnls8r5h6)-pymj%nd'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.113','localhost', '127.0.0.1', config('SERVER', default='127.0.0.1')]
+ALLOWED_HOSTS = ['*']
 AUTH_USER_MODEL = 'testapp.User'
 
 # Application definition
@@ -42,7 +42,9 @@ INSTALLED_APPS = [
     'app',
     'activity_log',
     'testapp',
-    'mikrotik.apps.MikrotikConfig'
+    'mikrotik.apps.MikrotikConfig',
+    'monitoring',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [

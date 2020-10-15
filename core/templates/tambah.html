@@ -1,0 +1,123 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Page Blank {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+<style>
+
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="row">
+          <div class="col-md-12">
+            <div class="card">
+
+              <form role="form" method="post">
+              
+                {% csrf_token %} 
+
+                <div class="card-header">
+                  <h5 class="title">Tambah User</h5>
+                  {% if status %}
+                  <h6 class="card-category">
+                  <span class="text-success">{{ text }}</span>
+                  </h6>
+                {% else %}
+                  <h6 class="card-category">
+                  <span class="text-danger">{{ text }}</span>
+                  </h6>
+                {% endif %}
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                      <div class="col-md-6 px-md-10">
+                        <div class="form-group">
+                          <label>IP Address</label>
+                          {{ form.address }}
+                        </div>
+                      </div>
+                        <div class="col-md-6 px-md-10">
+                        <div class="form-group">
+                          <label>Port SSH</label>
+                          {{ form.port }}
+                        </div>
+                      </div>
+
+                    </div>
+                    <div class="row">
+      
+
+
+                    </div>
+                    <div class="row">
+
+                      <div class="col-md-6 px-md-10">
+                        <div class="form-group">
+                          <label>Username SSH</label>
+                          {{ form.router }}
+                        </div>
+                      </div>
+                        <div class="col-md-6 px-md-10">
+                        <div class="form-group">
+                          <label>Password SSH</label>
+                          {{ form.sandi }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row">
+                    </div>
+                    <div class="row">
+
+                      <div class="col-md-6 px-md-10">
+                        <div class="form-group">
+                          <label>Community</label>
+                          {{ form.community }}
+                        </div>
+                      </div>
+
+                    </div>
+                    <div class="row">
+
+                      <div class="col-md-3 px-sm-10">
+                <button type="submit" class="btn btn-fill btn-primary">Tambah User</button>                            
+                      </div>
+
+                    </div>
+
+                </div>
+                
+              </form>
+              <div class="card-header">
+                        <h5 class="title">Pelanggan Baru Hari Ini :</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="col-md-6 px-md-2">
+                            <div class="form group">       
+                                <table class="table">
+                                    <tr style="text-align:center;">
+                                        <th>Nama Pelanggan</th>
+                                    </tr>
+                                    {% for data in baru %}
+                                        <tr style="text-align:center;">
+                                            <td>{{data}}</td>
+                                            
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+          </div>
+      </div>
+    
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
