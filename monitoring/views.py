@@ -352,8 +352,11 @@ class BulanView(APIView):
         try:
             client = InfluxDBClient(host='localhost',port=8086,database='telegraf')
             query = "SELECT derivative(mean(Upload),1s) AS Upload, derivative(mean(Download),1s) AS Download FROM \"" + context['username'] + "\" where time >= \'" + awal + "\' and time < \'" + akhir + "\' group by time(1s)"
+            query2 = "SELECT derivative(mean(Upload),1s) AS Upload, derivative(mean(Download),1s) AS Download FROM \"" + context['username'] + "\" where time >= \'" + awal + "\' and time < \'" + akhir + "\' group by time(1m)"
             result = client.query(query)
+            result2 = client.query(query2)
             point = list(result.get_points())
+            point2 = list(result2.get_points())
             time = []
             upload = []
             download = []
@@ -367,7 +370,13 @@ class BulanView(APIView):
             total1 = 0    
             range1 = []
             range2 = []
-            usage = []    
+            usage = []
+            unduh = []
+            unggah = []
+            for poin in point2:
+                time.append(poin['time'])
+                unduh.append(poin['Download'])
+                unggah.append(poin['Upload'])   
             for poin in point:
                 if(poin['Upload']<=1250000):
                     upload1.append(poin['Upload'])
@@ -385,7 +394,6 @@ class BulanView(APIView):
                     download3.append(poin['Download'])
                 else:
                     print("Tidak Ada Data")
-                time.append(poin['time'])
                 upload.append(poin['Upload'])
                 download.append(poin['Download'])
             total = sum(upload)
@@ -473,8 +481,8 @@ class BulanView(APIView):
             'range2' : range2,
             'langganan' : langganan,
             'waktu' : time,
-            'upload' : upload,
-            'download' : download,
+            'upload' : unggah,
+            'download' : unduh,
             'pesan' : pesan,
         }
         json_object = json.dumps(influx)
@@ -490,9 +498,11 @@ class RangeView(APIView):
             context['awal'] = "{}".format(awal).replace('\"','')
             context['akhir'] = "{}".format(akhir).replace('\"','')
             query = "SELECT derivative(mean(Upload),1s) AS Upload, derivative(mean(Download),1s) AS Download FROM \"" + context['username'] + "\" where time >= \'" + context['awal'] + "\' and time < \'" + context['akhir'] + "\' group by time(1s)"
-            print(query)
+            query2 = "SELECT derivative(mean(Upload),1s) AS Upload, derivative(mean(Download),1s) AS Download FROM \"" + context['username'] + "\" where time >= \'" + context['awal'] + "\' and time < \'" + context['akhir'] + "\' group by time(1m)"
             result = client.query(query)
+            result2 = client.query(query2)
             point = list(result.get_points())
+            point2 = list(result2.get_points())
             time = []
             upload = []
             download = []
@@ -506,7 +516,13 @@ class RangeView(APIView):
             total1 = 0
             range1 = []
             range2 = []
-            usage = []        
+            usage = []
+            unduh = []
+            unggah = []
+            for poin in point2:
+                time.append(poin['time'])
+                unduh.append(poin['Download'])
+                unggah.append(poin['Upload'])        
             for poin in point:
                 if(poin['Upload']<=1250000):
                     upload1.append(poin['Upload'])
@@ -524,7 +540,6 @@ class RangeView(APIView):
                     download3.append(poin['Download'])
                 else:
                     print("Tidak Ada Data")
-                time.append(poin['time'])
                 upload.append(poin['Upload'])
                 download.append(poin['Download'])
             total = sum(upload)
@@ -611,8 +626,8 @@ class RangeView(APIView):
             'range2' : range2,
             'langganan' : langganan,
             'waktu' : time,
-            'upload' : upload,
-            'download' : download,
+            'upload' : unggah,
+            'download' : unduh,
             'pesan' : pesan,
         }
         json_object = json.dumps(influx)

@@ -90,6 +90,8 @@ def set_control(request):
         sh_id = str(int(sh)-1)
         sh_up = con.oshared.pmaxlimitup
         sh_down = con.oshared.pmaxlimitdown
+        sh_name = con.oshared.pname
+        ded_name = con.odedicated.pname
         ded_down = con.odedicated.pmaxlimitdown
 
         # influx db
@@ -104,14 +106,14 @@ def set_control(request):
         while tog.is_working == True:
             tog = toogle.objects.get(id=1)
             if tog.is_working == True:
-                que_mean = "SELECT derivative(mean(Download),1s) AS Download FROM \"Queue Dedicated\" where time>= now()- 10s group by time(1s) fill(null) tz('Asia/Jakarta')"
-                query = "SELECT derivative(mean(Download),1s) AS Download FROM \"Queue Dedicated\" where time>= now()- 24h group by time(1s) fill(null) tz('Asia/Jakarta')"
+                que_mean = "SELECT derivative(mean(Download),1s) AS Download FROM \""+str(ded_name)+"\" where time>= now()- 15s group by time(1s) fill(null) tz('Asia/Jakarta')"
+                query = "SELECT derivative(mean(Download),1s) AS Download FROM \""+str(ded_name)+"\" where time>= now()- 24h group by time(1s) fill(null) tz('Asia/Jakarta')"
                 result = client.query(query)
                 res_mean = client.query(que_mean)
                 point = list(result.get_points())
                 po_mean = list(res_mean.get_points())
                 set_autocontrol(simple,point,po_mean,sh_up,sh_down,client,sh_id)
-                time.sleep(10)
+                time.sleep(5)
             else :
                 set_falsecontrol(simple,sh_up,sh_down,sh_id)
     return HttpResponse('success')
@@ -127,25 +129,28 @@ def set_autocontrol(spl,data,da_mean,maxUp,maxDown,dbinflux,sh_id):
         down.append(datas['Download'])
     for arrs in da_mean:
         arr_mean.append(arrs['Download'])
-    maxlimit = 100/8
+    maxlimit = 60/8
     thrDown = (down[len(down)-1])/1000000
     stadev = (statistics.pstdev(arr_mean))/1000000
+    varian = stadev*stadev
     avg = (statistics.mean(arr_mean))/1000000
+    ranges = ((max(arr_mean))-(min(arr_mean)))/1000000
+    constanta = ranges/stadev
     print("==========================")
     print("Download :" + "%.1f" %(thrDown)+ "M")	
     print("Standar Deviasi :" + "%.1f" %(stadev)+ "M")
     print("Average :" + "%.1f" %(avg) + "M")
+    print("Konstanta :" + "%.0f" %(constanta))
     
-    if avg >= 0.67*maxlimit:
-        space = thrDown + (0.34*stadev)
+    if stadev >= 1.00:
+        space = avg + (2*stadev)
         set_allocation(spl,space,maxlimit,sh_id)  
-    elif avg >= 0.34*maxlimit:
-        space = thrDown + (0.67*stadev)
+    elif stadev < 1.00:
+        space = avg + (constanta*stadev)
         set_allocation(spl,space,maxlimit,sh_id)
-    elif avg < 0.34*maxlimit:
-        space = thrDown + stadev
-        set_allocation(spl,space,maxlimit,sh_id)
-
+    #elif avg < 0.34*maxlimit:
+    #    space = avg + stadev
+    #    set_allocation(spl,space,maxlimit,sh_id)
 
 def set_allocation(spl,space,maxlimit,sh_id):
     if space > maxlimit:

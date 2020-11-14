@@ -228,9 +228,10 @@ function render(endpoint){
             }
         },
         error: function(error_data){
+            $(".loading").hide();
             console.log("error")
             console.log(error_data)
-            message(error_data);
+            message("API Error!");
         }
     })
 }
@@ -265,7 +266,7 @@ function setChart() {
             gridThickness: 0.5,
 			labelFontColor: "#d048b6",
       	    tickThickness: 0,
-    valueFormatString: "DDD HH:mm:ss"
+    valueFormatString: "DD MMM HH:mm:ss"
 		    },
             axisY :{
                 tickThickness: 0,
